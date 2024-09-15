@@ -4,6 +4,7 @@ import neat
 import math
 import numpy as np
 from car import Car
+from lidar_sensor import Lidar
 pygame.init()
 WIDTH = 800
 HEIGHT = 600
@@ -58,34 +59,7 @@ LIDAR_ANGLE_STEP = FOV / NUM_RAYS  # Angular increment per ray
 tracks = {"1" : ["track1.png", (420, 512)],}
 track = pygame.image.load(tracks["1"][0]).convert()
 car = Car(WIDTH, HEIGHT, tracks["1"][1])
-def cast_ray(x, y, angle):
-    for i in range(MAX_RANGE):
-        ray_x = int(x + i * math.cos(angle))
-        ray_y = int(y + i * math.sin(angle))
-        
-        # Check if the ray is out of bounds
-        if ray_x < 0 or ray_x >= WIDTH or ray_y < 0 or ray_y >= HEIGHT:
-            return (ray_x, ray_y), i
-        
-        # Check if the ray hits a black pixel on the track
-        if track.get_at((ray_x, ray_y)) == (255, 255, 255, 255):  # Black pixel (track)
-            return (ray_x, ray_y), i
-    
-    # If no collision, return the maximum range
-    return (int(x + MAX_RANGE * math.cos(angle)), int(y + MAX_RANGE * math.sin(angle))), MAX_RANGE
-def simulate_lidar(x, y):
-    distances = []
-    rays = []
-    
-    for i in range(NUM_RAYS):
-        angle = math.radians(i * LIDAR_ANGLE_STEP)  # Convert angle to radians
-        hit_point, distance = cast_ray(x, y, angle)
-        distances.append(distance)
-        rays.append(hit_point)
-    
-    return distances, rays
-
-            
+lidar = Lidar(track, WIDTH, HEIGHT)
     
 while running:
    
@@ -98,10 +72,9 @@ while running:
     car.key_pressed(keys)
     car.handling()
     car.change_velocity()
-    
     car.steering()
     x, y = car.report_position()
-    distances, hit_points = simulate_lidar(x, y)
+    distances, hit_points = lidar.simulate_lidar(x, y)
     
     for distance in distances:  
         if distance <= 0:
