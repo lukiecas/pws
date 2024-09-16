@@ -1,5 +1,5 @@
 # pws
 pws project school 
 dependencies:
-neat-python
+neat-python,
 pygame
