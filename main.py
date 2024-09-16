@@ -57,6 +57,10 @@ while running:
     rotated_car, rotated_rect = car.moving_car()
     screen.blit(track, (0, 0))
     screen.blit(rotated_car, rotated_rect.topleft)
+    for hit_point in hit_points:
+
+        pygame.draw.line(screen, (255, 0, 0), (x, y), hit_point)
+
     if car.has_finished():
         print("track has been completed")
     # Update display

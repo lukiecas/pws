@@ -26,13 +26,11 @@ class Lidar:
     def simulate_lidar(self, x, y):
         distances = []
         rays = []
-        angles = []
+        
         for i in range(self.NUM_RAYS):
             angle = math.radians(i * self.LIDAR_ANGLE_STEP)  # Convert angle to radians
             hit_point, distance = self.cast_ray(x, y, angle)
             distances.append(distance)
             rays.append(hit_point)
-            for ray in rays:
-                pass
-        
+            
         return distances, rays
