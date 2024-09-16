@@ -1,7 +1,7 @@
 import math
 class Lidar:
     def __init__(self, track, WIDTH, HEIGHT):
-        self.NUM_RAYS = 20  # Number of LiDAR rays
+        self.NUM_RAYS = 16  # Number of LiDAR rays
         self.FOV = 360  # Field of view in degrees (360 for full circle)
         self.MAX_RANGE = 200  # Max range of LiDAR in pixels
         self.LIDAR_ANGLE_STEP = self.FOV / self.NUM_RAYS  # Angular increment per ray
@@ -26,11 +26,13 @@ class Lidar:
     def simulate_lidar(self, x, y):
         distances = []
         rays = []
-        
+        angles = []
         for i in range(self.NUM_RAYS):
             angle = math.radians(i * self.LIDAR_ANGLE_STEP)  # Convert angle to radians
             hit_point, distance = self.cast_ray(x, y, angle)
             distances.append(distance)
             rays.append(hit_point)
+            for ray in rays:
+                pass
         
         return distances, rays

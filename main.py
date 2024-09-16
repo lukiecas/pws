@@ -18,44 +18,18 @@ FOV = 360  # Field of view in degrees (360 for full circle)
 MAX_RANGE = 200  # Max range of LiDAR in pixels
 LIDAR_ANGLE_STEP = FOV / NUM_RAYS  # Angular increment per ray
 
-
 """def eval_genomes(genomes, config):
     for genome_id, genome in genomes:
         net = neat.nn.FeedForwardNetwork.create(genome, config)
-        
-        # Initialize car and simulation here
-        car = Car()  # Assume you have a Car class
-        fitness = 0
-        
-        while not car.has_crashed():
-            inputs = car.get_sensor_data()  # Get LiDAR, speed, etc.
-            output = net.activate(inputs)
-            
-            car.steer(output[0])  # Steering
-            car.throttle(output[1])  # Throttle
-            
-            car.update()
-            fitness += car.get_distance_traveled()  # Add to fitness
-            
-        genome.fitness = fitness """
-"""def run_neat():
-    # Load configuration
-    config_path = './config-feedforward'
-    config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
-                                neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                                config_path)
-    
-    # Create the population
-    population = neat.Population(config)
-
-    # Add a reporter for detailed stats
-    population.add_reporter(neat.StdOutReporter(True))
-    stats = neat.StatisticsReporter()
-    population.add_reporter(stats)
-
-    # Run NEAT
-    winner = population.run(eval_genomes, 50)  # Run for 50 generations
-    print(f"Best genome: {winner}") """
+        # Here, you should simulate the car and use `net` to decide actions
+        # for example: inputs = [lidar_data_1, lidar_data_2, lidar_data_3, lidar_data_4]
+        inputs = distances  # Example data from LiDAR
+        output = net.activate(inputs)
+        # Calculate the fitness based on car behavior (e.g., lap time, distance covered)
+        genome.fitness = compute_fitness(output)
+def compute_fitness(output):
+    # Implement your logic to compute fitness based on the control actions
+    return fitness """
 tracks = {"1" : ["track1.png", (420, 512)],}
 track = pygame.image.load(tracks["1"][0]).convert()
 car = Car(WIDTH, HEIGHT, tracks["1"][1])
@@ -83,7 +57,8 @@ while running:
     rotated_car, rotated_rect = car.moving_car()
     screen.blit(track, (0, 0))
     screen.blit(rotated_car, rotated_rect.topleft)
-    
+    if car.has_finished():
+        print("track has been completed")
     # Update display
     pygame.display.flip()
     

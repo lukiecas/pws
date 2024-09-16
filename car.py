@@ -70,3 +70,6 @@ class Car:
         return self.x, self.y
     def has_died(self):
         self.x, self.y = self.track_init
+    def has_finished(self):
+        if self.x == self.track_init[0] and self.y > self.track_init[1] + 50:
+            return True
