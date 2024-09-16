@@ -23,14 +23,18 @@ class Lidar:
         
         # If no collision, return the maximum range
         return (int(x + self.MAX_RANGE * math.cos(angle)), int(y + self.MAX_RANGE * math.sin(angle))), self.MAX_RANGE
-    def simulate_lidar(self, x, y):
+    def simulate_lidar(self, x, y, car_orientation):
         distances = []
         rays = []
         
         for i in range(self.NUM_RAYS):
-            angle = math.radians(i * self.LIDAR_ANGLE_STEP)  # Convert angle to radians
+            angle = math.radians(car_orientation) + math.radians(i * self.LIDAR_ANGLE_STEP)  # Convert angle to radians
             hit_point, distance = self.cast_ray(x, y, angle)
             distances.append(distance)
             rays.append(hit_point)
-            
+        
+        for i in range(6):
+            j = i + 5
+            distances.pop(j)
+            rays.pop(j)
         return distances, rays

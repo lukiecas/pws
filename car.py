@@ -1,15 +1,15 @@
 import pygame
 import math
+import pyautogui as pg
 class Car:
-    def __init__(self, WIDTH, HEIGHT, track_init):
-        car_img = pygame.image.load("yellow-car-top-view-free-png.png").convert_alpha()  # Smaller car to represent RC car
+    def __init__(self, WIDTH, HEIGHT, track_init, car_img):
         self.car_img = pygame.transform.scale(car_img, (30, 20))
         self.car_rect = car_img.get_rect(center=(WIDTH//2, HEIGHT//2))  # Car's starting position
         # Constants for RC car behavior
-        self.MAX_VELOCITY = 8  # Max speed is higher for an RC car
+        self.MAX_VELOCITY = 1  # Max speed is higher for an RC car
         self.ACCELERATION_RATE = 0.2  # RC cars accelerate faster
         self.BRAKE_RATE = 0.1  # RC cars decelerate faster
-        self.MAX_STEERING_ANGLE = 70  # RC cars can turn more sharply
+        self.max_steering_angle = 70  # RC cars can turn more sharply
         self.TURN_RATE = 8  # Faster turn rate
         self.FRICTION = 0.95  # Reduced friction to simulate more skidding
         self.velocity = 0  # Initial velocity
@@ -18,29 +18,31 @@ class Car:
         self.acceleration = 0  # Acceleration
         self.steering_angle = 0  # Steering input
         self.car_length = 30
+        self.distance_covered = 0
         self.track_init = track_init
         self.x, self.y = track_init  # Initial position
-    def key_pressed(self, keys):
-        self.keys = keys
-    def steering(self):
-        if self.keys[pygame.K_LEFT]:
-            self.steering_angle = min(self.steering_angle + 2, self.MAX_STEERING_ANGLE)
+    def steering(self, max_steering_angle):
+        self.max_steering_angle = max_steering_angle
         
-        elif self.keys[pygame.K_RIGHT]:
-            self.steering_angle = max(self.steering_angle - 2, -self.MAX_STEERING_ANGLE)
+        if max_steering_angle > 0:
+            self.steering_angle = min(self.steering_angle + 2, self.max_steering_angle * 70)
+        
+        elif max_steering_angle < 0:
+            self.steering_angle = max(self.steering_angle - 2, self.max_steering_angle * 70)
             
         else:
             self.steering_angle *= 0.9  # Return steering gradually to center
-    def handling(self):
-        if self.keys[pygame.K_UP]:
-            self.acceleration = self.ACCELERATION_RATE
-        elif self.keys[pygame.K_DOWN]:
-            self.acceleration = -self.BRAKE_RATE
+    def handling(self, throttle):
+        self.throttle = throttle
+        if self.throttle > 0: #self.keys[pygame.K_UP]:
+            self.acceleration = self.throttle * 0.2
+        elif self.throttle < 0:
+            self.acceleration = self.throttle * 0.1
         else:
             self.acceleration = 0
     def change_velocity(self):
         self.velocity += self.acceleration
-        self.velocity = max(min(self.velocity, self.MAX_VELOCITY), -self.MAX_VELOCITY)
+        self.velocity = max(min(self.velocity, self.throttle * 4), -self.MAX_VELOCITY)
         self.velocity *= self.FRICTION
     def moving_car(self):
         # If there's velocity, calculate the turning radius
@@ -67,7 +69,7 @@ class Car:
         rotated_rect = rotated_car.get_rect(center=self.car_rect.center)
         return rotated_car, rotated_rect
     def report_position(self):
-        return self.x, self.y
+        return self.x, self.y, self.angle
     def has_died(self):
         self.x, self.y = self.track_init
         self.velocity = 0  # Initial velocity
@@ -78,3 +80,7 @@ class Car:
     def has_finished(self):
         if self.x == self.track_init[0] and self.y > self.track_init[1] + 100:
             return True
+    def get_distance_covered(self):
+        self.distance_covered = self.distance_covered + self.velocity
+        return self.distance_covered
+    
