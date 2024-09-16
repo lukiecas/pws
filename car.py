@@ -2,7 +2,7 @@ import pygame
 import math
 class Car:
     def __init__(self, WIDTH, HEIGHT, track_init):
-        car_img = pygame.image.load("C:\\Users\\lucas\\Desktop\\pws\\pws\\pws-main\\yellow-car-top-view-free-png.png").convert_alpha()  # Smaller car to represent RC car
+        car_img = pygame.image.load("yellow-car-top-view-free-png.png").convert_alpha()  # Smaller car to represent RC car
         self.car_img = pygame.transform.scale(car_img, (30, 20))
         self.car_rect = car_img.get_rect(center=(WIDTH//2, HEIGHT//2))  # Car's starting position
         # Constants for RC car behavior
@@ -25,10 +25,10 @@ class Car:
     def steering(self):
         if self.keys[pygame.K_LEFT]:
             self.steering_angle = min(self.steering_angle + 2, self.MAX_STEERING_ANGLE)
-            print("steering left")
+        
         elif self.keys[pygame.K_RIGHT]:
             self.steering_angle = max(self.steering_angle - 2, -self.MAX_STEERING_ANGLE)
-            print("steering right")
+            
         else:
             self.steering_angle *= 0.9  # Return steering gradually to center
     def handling(self):
@@ -70,6 +70,11 @@ class Car:
         return self.x, self.y
     def has_died(self):
         self.x, self.y = self.track_init
+        self.velocity = 0  # Initial velocity
+        self.angle = 0  # Initial orientation (angle in radians)
+        self.angular_velocity = 0  # Initial angular velocity
+        self.acceleration = 0  # Acceleration
+        self.steering_angle = 0  # Steering input
     def has_finished(self):
-        if self.x == self.track_init[0] and self.y > self.track_init[1] + 50:
+        if self.x == self.track_init[0] and self.y > self.track_init[1] + 100:
             return True
