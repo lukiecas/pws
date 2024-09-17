@@ -77,6 +77,8 @@ def eval_genomes(genomes, config):
             # Update display
             text_surface = my_font.render(str(num), False, (0, 0, 0))
             screen.blit(text_surface, (0,0))
+            fps_surface = my_font.render(str(round(clock.get_fps())), False, (0, 0, 0))
+            screen.blit(fps_surface, (0,50))
             pygame.display.flip()
             # Frame rate
             clock.tick(5000)
@@ -114,6 +116,6 @@ def run_neat(config_file, checkpoint=None):
 
 if __name__ == "__main__":
     config_path = "config-feedforward.txt"  # Path to your NEAT config file
-    checkpoint_file = 'neat-checkpoint-2'
+    checkpoint_file = 'neat-checkpoint-4'
     run_neat(config_path, checkpoint_file)
     pygame.quit()
