@@ -1,12 +1,17 @@
 import pygame
 import random
+import pickle
 import neat
 import math
 import numpy as np
 from car import Car
 import pyautogui as pg
 from lidar_sensor import Lidar
+
 pygame.init()
+pygame.font.init()
+my_font = pygame.font.SysFont('Comic Sans MS', 30)
+
 WIDTH = 800
 HEIGHT = 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -18,26 +23,28 @@ NUM_RAYS = 20  # Number of LiDAR rays
 FOV = 360  # Field of view in degrees (360 for full circle)
 MAX_RANGE = 200  # Max range of LiDAR in pixels
 LIDAR_ANGLE_STEP = FOV / NUM_RAYS  # Angular increment per ray
-
+checkpoint = input("laden vanuit checkpoint?")
 
 tracks = {"1" : ["track1.png", (420, 512)],}
 track = pygame.image.load(tracks["1"][0]).convert()
 car_img = pygame.image.load("yellow-car-top-view-free-png.png").convert_alpha()  # Smaller car to represent RC car
 
 def eval_genomes(genomes, config):
+    num = 0
     for genome_id, genome in genomes:
+        num+=1
         net = neat.nn.FeedForwardNetwork.create(genome, config) 
         car = Car(WIDTH, HEIGHT, tracks["1"][1], car_img)
         lidar = Lidar(track, WIDTH, HEIGHT)
-
         genome_fitness = 0
         running = True
         while running:
-        
+            
             
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+                    
             x, y, angle = car.report_position()
             distances, hit_points = lidar.simulate_lidar(x, y, -angle)
             normalized_distances = [d / MAX_RANGE for d in distances]
@@ -69,11 +76,12 @@ def eval_genomes(genomes, config):
             if car.has_finished():
                 print("track has been completed")
             # Update display
+            text_surface = my_font.render(str(num), False, (0, 0, 0))
+            screen.blit(text_surface, (0,0))
             pygame.display.flip()
             # Frame rate
-            clock.tick(60)
-
-    pygame.quit()
+            clock.tick(5000)
+            
 def run_neat(config_file):
     config = neat.config.Config(
         neat.DefaultGenome,
@@ -90,12 +98,32 @@ def run_neat(config_file):
     population.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     population.add_reporter(stats)
+    if int(checkpoint):
+        with open('best_genome.pkl', 'rb') as f:
+            best_genome = pickle.load(f)
 
     # Run for up to 50 generations
-    winner = population.run(eval_genomes, 50)
-
+    winner = population.run(eval_genomes, 10)
+    with open('best_genome.pkl', 'wb') as f:
+        pickle.dump(winner, f)
     # Display the winning genome
     print('\nBest genome:\n{!s}'.format(winner))
+def run_neat_from_checkpoint(checkpoint_file):
+    # Restore the population from a saved checkpoint
+    pop = neat.Checkpointer.restore_checkpoint(checkpoint_file)
+
+    # Continue running the simulation
+    winner = pop.run(eval_genomes, 10)
+
+    # Save the best genome after finishing the run
+    with open('best_genome.pkl', 'wb') as f:
+        pickle.dump(winner, f)
 if __name__ == "__main__":
-    config_path = "config-feedforward.txt"  # Path to your NEAT config file
-    run_neat(config_path)
+    if not int(checkpoint):
+        config_path = "config-feedforward.txt"  # Path to your NEAT config file
+        run_neat(config_path)
+        pygame.quit()
+    if   int(checkpoint):
+        checkpoint_file = 'best_genome.pkl'  # Specify the checkpoint file
+        run_neat_from_checkpoint(checkpoint_file)
+        pygame.quit()

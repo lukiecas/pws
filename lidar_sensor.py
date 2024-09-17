@@ -33,8 +33,8 @@ class Lidar:
             distances.append(distance)
             rays.append(hit_point)
         
-        for i in range(6):
+        '''for i in range(6):
             j = i + 5
             distances.pop(j)
-            rays.pop(j)
+            rays.pop(j)'''
         return distances, rays

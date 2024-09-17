@@ -9,7 +9,7 @@ class Car:
         self.MAX_VELOCITY = 1  # Max speed is higher for an RC car
         self.ACCELERATION_RATE = 0.2  # RC cars accelerate faster
         self.BRAKE_RATE = 0.1  # RC cars decelerate faster
-        self.max_steering_angle = 70  # RC cars can turn more sharply
+          # RC cars can turn more sharply
         self.TURN_RATE = 8  # Faster turn rate
         self.FRICTION = 0.95  # Reduced friction to simulate more skidding
         self.velocity = 0  # Initial velocity
@@ -34,7 +34,7 @@ class Car:
             self.steering_angle *= 0.9  # Return steering gradually to center
     def handling(self, throttle):
         self.throttle = throttle
-        if self.throttle > 0: #self.keys[pygame.K_UP]:
+        if self.throttle > 0: 
             self.acceleration = self.throttle * 0.2
         elif self.throttle < 0:
             self.acceleration = self.throttle * 0.1
@@ -42,7 +42,7 @@ class Car:
             self.acceleration = 0
     def change_velocity(self):
         self.velocity += self.acceleration
-        self.velocity = max(min(self.velocity, self.throttle * 4), -self.MAX_VELOCITY)
+        self.velocity = max(min(self.velocity, self.throttle * self.MAX_VELOCITY), -self.MAX_VELOCITY)
         self.velocity *= self.FRICTION
     def moving_car(self):
         # If there's velocity, calculate the turning radius
