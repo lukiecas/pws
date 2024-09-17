@@ -23,7 +23,6 @@ NUM_RAYS = 20  # Number of LiDAR rays
 FOV = 360  # Field of view in degrees (360 for full circle)
 MAX_RANGE = 200  # Max range of LiDAR in pixels
 LIDAR_ANGLE_STEP = FOV / NUM_RAYS  # Angular increment per ray
-checkpoint = input("laden vanuit checkpoint?")
 
 tracks = {"1" : ["track1.png", (420, 512)],}
 track = pygame.image.load(tracks["1"][0]).convert()
@@ -82,7 +81,7 @@ def eval_genomes(genomes, config):
             # Frame rate
             clock.tick(5000)
             
-def run_neat(config_file):
+def run_neat(config_file, checkpoint=None):
     config = neat.config.Config(
         neat.DefaultGenome,
         neat.DefaultReproduction,
@@ -92,38 +91,29 @@ def run_neat(config_file):
     )
 
     # Create the population, which is the top-level object for a NEAT run
-    population = neat.Population(config)
+    
+    
+    if checkpoint:
+        population = neat.Checkpointer.restore_checkpoint(checkpoint)
+    else:
+        population = neat.Population(config)
 
     # Add a reporter to show progress in the terminal
     population.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     population.add_reporter(stats)
-    if int(checkpoint):
-        with open('best_genome.pkl', 'rb') as f:
-            best_genome = pickle.load(f)
+    population.add_reporter(neat.Checkpointer(generation_interval=1, filename_prefix='neat-checkpoint-'))
+
 
     # Run for up to 50 generations
-    winner = population.run(eval_genomes, 10)
+    winner = population.run(eval_genomes, 3)
     with open('best_genome.pkl', 'wb') as f:
         pickle.dump(winner, f)
     # Display the winning genome
     print('\nBest genome:\n{!s}'.format(winner))
-def run_neat_from_checkpoint(checkpoint_file):
-    # Restore the population from a saved checkpoint
-    pop = neat.Checkpointer.restore_checkpoint(checkpoint_file)
 
-    # Continue running the simulation
-    winner = pop.run(eval_genomes, 10)
-
-    # Save the best genome after finishing the run
-    with open('best_genome.pkl', 'wb') as f:
-        pickle.dump(winner, f)
 if __name__ == "__main__":
-    if not int(checkpoint):
-        config_path = "config-feedforward.txt"  # Path to your NEAT config file
-        run_neat(config_path)
-        pygame.quit()
-    if   int(checkpoint):
-        checkpoint_file = 'best_genome.pkl'  # Specify the checkpoint file
-        run_neat_from_checkpoint(checkpoint_file)
-        pygame.quit()
+    config_path = "config-feedforward.txt"  # Path to your NEAT config file
+    checkpoint_file = 'neat-checkpoint-2'
+    run_neat(config_path, checkpoint_file)
+    pygame.quit()
