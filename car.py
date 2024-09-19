@@ -2,11 +2,12 @@ import pygame
 import math
 import pyautogui as pg
 class Car:
-    def __init__(self, WIDTH, HEIGHT, track_init, car_img):
+    def __init__(self, WIDTH, HEIGHT, track_init, car_img, checkpoint):
+        self.checkpoint = checkpoint
         self.car_img = pygame.transform.scale(car_img, (30, 20))
         self.car_rect = car_img.get_rect(center=(WIDTH//2, HEIGHT//2))  # Car's starting position
         # Constants for RC car behavior
-        self.MAX_VELOCITY = 1  # Max speed is higher for an RC car
+        self.MAX_VELOCITY = 8  # Max speed is higher for an RC car
         self.ACCELERATION_RATE = 0.2  # RC cars accelerate faster
         self.BRAKE_RATE = 0.1  # RC cars decelerate faster
           # RC cars can turn more sharply
@@ -20,6 +21,7 @@ class Car:
         self.car_length = 30
         self.distance_covered = 0
         self.track_init = track_init
+        self.checkpoint_reached = False
         self.x, self.y = track_init  # Initial position
     def steering(self, max_steering_angle):
         self.max_steering_angle = max_steering_angle
@@ -42,7 +44,7 @@ class Car:
             self.acceleration = 0
     def change_velocity(self):
         self.velocity += self.acceleration
-        self.velocity = max(min(self.velocity, self.throttle * self.MAX_VELOCITY), -self.MAX_VELOCITY)
+        self.velocity = max(min(self.velocity, self.throttle * self.MAX_VELOCITY), 0)
         self.velocity *= self.FRICTION
     def moving_car(self):
         # If there's velocity, calculate the turning radius
@@ -77,8 +79,12 @@ class Car:
         self.angular_velocity = 0  # Initial angular velocity
         self.acceleration = 0  # Acceleration
         self.steering_angle = 0  # Steering input
+    def reached_checkpoint(self):
+        if ((self.checkpoint[0] - 20)< self.x < (self.checkpoint[0] + 20) and self.y < self.checkpoint[1] + 200):
+            self.checkpoint_reached = True
     def has_finished(self):
-        if self.x == self.track_init[0] and self.y > self.track_init[1] + 100:
+        self.reached_checkpoint()
+        if  (self.track_init[0] - 20)< self.x < (self.track_init[0] + 20) and self.y > self.track_init[1] - 200 and self.checkpoint_reached:
             return True
     def get_distance_covered(self):
         self.distance_covered = self.distance_covered + self.velocity
