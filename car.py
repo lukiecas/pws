@@ -1,5 +1,6 @@
 import pygame
 import math
+import time
 import pyautogui as pg
 class Car:
     def __init__(self, WIDTH, HEIGHT, track_init, car_img, checkpoint):
@@ -72,8 +73,10 @@ class Car:
         return rotated_car, rotated_rect
     def report_position(self):
         return self.x, self.y, self.angle
-    def is_moving(self):
-        if self.velocity == 0 and self.distance_covered > 0:
+    def get_velocity(self):
+        return self.velocity
+    def is_moving(self, start_time):
+        if self.velocity == 0 and (time.time() - start_time) >= 1:
             return False
         else:
             return True

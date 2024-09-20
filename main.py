@@ -3,6 +3,7 @@ import random
 import pickle
 import neat
 import math
+import time
 import numpy as np
 from car import Car
 import pyautogui as pg
@@ -39,6 +40,7 @@ def eval_genomes(genomes, config):
         lidar = Lidar(track, WIDTH, HEIGHT)
         genome_fitness = 0
         running = True
+        start = time.time()
         while running:
             
             
@@ -64,7 +66,7 @@ def eval_genomes(genomes, config):
             for distance in distances:  
                 if distance <= 0:
                     running = False
-            if not car.is_moving():
+            if not car.is_moving(start):
                 running = False
             genome.fitness = genome_fitness + car.get_distance_covered() / 1000.0
             rotated_car, rotated_rect = car.moving_car()
@@ -87,7 +89,10 @@ def eval_genomes(genomes, config):
             screen.blit(text_surface, (0,0))
             fps_surface = my_font.render(str(round(clock.get_fps())), False, (0, 0, 0))
             screen.blit(fps_surface, (0,50))
-           
+            fps_surface = my_font.render(str(round(car.get_velocity())), False, (0, 0, 0))
+            screen.blit(fps_surface, (0,100))
+            fps_surface = my_font.render(str(time.time() - start), False, (0, 0, 0))
+            screen.blit(fps_surface, (100,0))
             pygame.display.flip()
             num2+=1
             if num2 == 11:
@@ -117,7 +122,7 @@ def run_neat(config_file, checkpoint=None):
     population.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     population.add_reporter(stats)
-    population.add_reporter(neat.Checkpointer(generation_interval=1, filename_prefix='neat-checkpoint'))
+    population.add_reporter(neat.Checkpointer(generation_interval=9, filename_prefix='neat-checkpoint'))
 
 
     # Run for up to 50 generations
@@ -129,6 +134,6 @@ def run_neat(config_file, checkpoint=None):
 
 if __name__ == "__main__":
     config_path = "config-feedforward.txt"  # Path to your NEAT config file
-    checkpoint_file = 'neat-checkpoint39'
+    checkpoint_file = 'neat-checkpoint75'
     run_neat(config_path, checkpoint_file)
     pygame.quit()
