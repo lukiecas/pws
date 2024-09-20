@@ -61,7 +61,8 @@ def eval_genomes(genomes, config):
             for distance in distances:  
                 if distance <= 0:
                     running = False
-               
+            if not car.is_moving():
+                running = False
             genome.fitness = genome_fitness + car.get_distance_covered() / 1000.0
             rotated_car, rotated_rect = car.moving_car()
             screen.blit(track, (0, 0))
@@ -83,6 +84,7 @@ def eval_genomes(genomes, config):
             screen.blit(text_surface, (0,0))
             fps_surface = my_font.render(str(round(clock.get_fps())), False, (0, 0, 0))
             screen.blit(fps_surface, (0,50))
+           
             pygame.display.flip()
             # Frame rate
             clock.tick(5000)

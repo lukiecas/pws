@@ -72,13 +72,11 @@ class Car:
         return rotated_car, rotated_rect
     def report_position(self):
         return self.x, self.y, self.angle
-    def has_died(self):
-        self.x, self.y = self.track_init
-        self.velocity = 0  # Initial velocity
-        self.angle = 0  # Initial orientation (angle in radians)
-        self.angular_velocity = 0  # Initial angular velocity
-        self.acceleration = 0  # Acceleration
-        self.steering_angle = 0  # Steering input
+    def is_moving(self):
+        if self.velocity == 0 and self.distance_covered > 0:
+            return False
+        else:
+            return True
     def reached_checkpoint(self):
         if ((self.checkpoint[0] - 20)< self.x < (self.checkpoint[0] + 20) and self.y < self.checkpoint[1] + 200):
             self.checkpoint_reached = True
