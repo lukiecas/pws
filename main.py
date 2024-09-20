@@ -30,8 +30,10 @@ car_img = pygame.image.load("yellow-car-top-view-free-png.png").convert_alpha() 
 
 def eval_genomes(genomes, config):
     num = 0
+    num2 = 0
     for genome_id, genome in genomes:
         num+=1
+        
         net = neat.nn.FeedForwardNetwork.create(genome, config) 
         car = Car(WIDTH, HEIGHT, tracks["1"][1], car_img, tracks["1"][2])
         lidar = Lidar(track, WIDTH, HEIGHT)
@@ -45,13 +47,14 @@ def eval_genomes(genomes, config):
                     running = False
                     
             x, y, angle = car.report_position()
-            distances, hit_points = lidar.simulate_lidar(x, y, -angle)
-            normalized_distances = [d / MAX_RANGE for d in distances]
+            if num2 == 0:
+                distances, hit_points = lidar.simulate_lidar(x, y, -angle)
+                normalized_distances = [d / MAX_RANGE for d in distances]
             output = net.activate(normalized_distances)
             steering = output[0]
             throttle = output[1]    
             
-            keys = pygame.key.get_pressed()
+            
             
             car.handling(throttle)
             car.change_velocity()
@@ -86,8 +89,12 @@ def eval_genomes(genomes, config):
             screen.blit(fps_surface, (0,50))
            
             pygame.display.flip()
+            num2+=1
+            if num2 == 11:
+                num2=0
             # Frame rate
             clock.tick(5000)
+
             
 def run_neat(config_file, checkpoint=None):
     config = neat.config.Config(
@@ -122,6 +129,6 @@ def run_neat(config_file, checkpoint=None):
 
 if __name__ == "__main__":
     config_path = "config-feedforward.txt"  # Path to your NEAT config file
-    checkpoint_file = 'neat-checkpoint5'
+    checkpoint_file = 'neat-checkpoint39'
     run_neat(config_path, checkpoint_file)
     pygame.quit()
