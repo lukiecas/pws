@@ -8,6 +8,7 @@ import numpy as np
 from car import Car
 import pyautogui as pg
 from lidar_sensor import Lidar
+import matplotlib.pyplot as plt
 
 pygame.init()
 pygame.font.init()
@@ -31,18 +32,15 @@ car_img = pygame.image.load("yellow-car-top-view-free-png.png").convert_alpha() 
 
 def eval_genomes(genomes, config):
     num = 0
-    num2 = 0
     for genome_id, genome in genomes:
+        num2 = 0
         num+=1
-        
         net = neat.nn.FeedForwardNetwork.create(genome, config) 
         car = Car(WIDTH, HEIGHT, tracks["1"][1], car_img, tracks["1"][2])
         lidar = Lidar(track, WIDTH, HEIGHT)
-        genome_fitness = 0
         running = True
         start = time.time()
         while running:
-            
             
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -52,15 +50,12 @@ def eval_genomes(genomes, config):
             if num2 == 0:
                 distances, hit_points = lidar.simulate_lidar(x, y, -angle)
                 normalized_distances = [d / MAX_RANGE for d in distances]
-            output = net.activate(normalized_distances)
-            steering = output[0]
-            throttle = output[1]    
-            
-            
-            
-            car.handling(throttle)
-            car.change_velocity()
-            car.steering(steering)
+                output = net.activate(normalized_distances)
+                steering = output[0]
+                throttle = output[1]    
+                car.handling(throttle)
+                car.change_velocity()
+                car.steering(steering)
             
             
             for distance in distances:  
@@ -68,7 +63,8 @@ def eval_genomes(genomes, config):
                     running = False
             if not car.is_moving(start):
                 running = False
-            genome.fitness = genome_fitness + car.get_distance_covered() / 1000.0
+
+            genome.fitness = car.get_distance_covered() / 1000.0
             rotated_car, rotated_rect = car.moving_car()
             screen.blit(track, (0, 0))
             screen.blit(rotated_car, rotated_rect.topleft)
@@ -80,7 +76,7 @@ def eval_genomes(genomes, config):
                     pygame.draw.line(screen, (255, 0, 0), (x, y), hit_point)
             
             if car.has_finished():
-                genome.fitness += 100
+                genome.fitness += 5
                 running = False
             # Update display
             #text_surface = my_font.render(str(round(x)) + "," + str(round(y)), False, (0, 0, 0))
@@ -94,13 +90,12 @@ def eval_genomes(genomes, config):
             fps_surface = my_font.render(str(time.time() - start), False, (0, 0, 0))
             screen.blit(fps_surface, (100,0))
             pygame.display.flip()
-            num2+=1
+            num2 += 1
             if num2 == 11:
-                num2=0
+                num2 = 0
             # Frame rate
             clock.tick(5000)
 
-            
 def run_neat(config_file, checkpoint=None):
     config = neat.config.Config(
         neat.DefaultGenome,
@@ -112,7 +107,6 @@ def run_neat(config_file, checkpoint=None):
 
     # Create the population, which is the top-level object for a NEAT run
     
-    
     if checkpoint:
         population = neat.Checkpointer.restore_checkpoint(checkpoint)
     else:
@@ -122,18 +116,34 @@ def run_neat(config_file, checkpoint=None):
     population.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     population.add_reporter(stats)
-    population.add_reporter(neat.Checkpointer(generation_interval=9, filename_prefix='neat-checkpoint'))
+    population.add_reporter(neat.Checkpointer(generation_interval=5, filename_prefix='neat-checkpoint'))
 
 
     # Run for up to 50 generations
-    winner = population.run(eval_genomes, 10)
+    winner = population.run(eval_genomes, 11)
     with open('best_genome.pkl', 'wb') as f:
         pickle.dump(winner, f)
     # Display the winning genome
     print('\nBest genome:\n{!s}'.format(winner))
+    plot_stats(stats)
+
+def plot_stats(statistics):
+    generation = range(len(statistics.most_fit_genomes))
+    avg_fitness = np.array(statistics.get_fitness_mean())
+
+    plt.plot(generation, avg_fitness, 'b-', label="average")
+
+    plt.title("Population's average fitness")
+    plt.xlabel("Generations")
+    plt.ylabel("Fitness")
+    plt.grid()
+    plt.legend(loc="best")
+    plt.show()
+
+
 
 if __name__ == "__main__":
     config_path = "config-feedforward.txt"  # Path to your NEAT config file
-    checkpoint_file = 'neat-checkpoint75'
+    checkpoint_file = 'neat-checkpoint131'
     run_neat(config_path, checkpoint_file)
     pygame.quit()
