@@ -94,7 +94,7 @@ def eval_genomes(genomes, config):
             if num2 == 11:
                 num2 = 0
             # Frame rate
-            clock.tick(5000)
+            clock.tick(60)
 
 def run_neat(config_file, checkpoint=None):
     config = neat.config.Config(
