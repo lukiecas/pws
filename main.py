@@ -28,7 +28,7 @@ LIDAR_ANGLE_STEP = FOV / NUM_RAYS  # Angular increment per ray
 
 tracks = {"1" : ["track1.png", (420, 512), (413, 130)],"2" : ["track2.png", (420, 520)],}
 track = pygame.image.load(tracks["1"][0]).convert()
-car_img = pygame.image.load("yellow-car-top-view-free-png.png").convert_alpha()  # Smaller car to represent RC car
+car_img = pygame.image.load("hawktuah.webp").convert_alpha()  # Smaller car to represent RC car
 
 def eval_genomes(genomes, config):
     num = 0
