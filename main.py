@@ -57,8 +57,8 @@ def eval_genomes(genomes, config):
                 car.change_velocity()
                 car.steering(steering)
             
-            
-            for distance in distances:  
+            check_if_hit, _ = lidar.simulate_lidar(x, y, -angle)
+            for distance in check_if_hit:  
                 if distance <= 0:
                     running = False
             if not car.is_moving(start):
