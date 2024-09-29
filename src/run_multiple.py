@@ -9,6 +9,13 @@ from car import Car
 import pyautogui as pg
 from lidar_sensor import Lidar
 import matplotlib.pyplot as plt
+import visualize
+import os
+
+try:
+    os.chdir("/home/sjanschen/pws")
+except FileNotFoundError:
+    os.chdir("lucas-file-systeem")
 
 pygame.init()
 pygame.font.init()
@@ -16,6 +23,7 @@ my_font = pygame.font.SysFont('Comic Sans MS', 30)
 
 WIDTH = 800
 HEIGHT = 600
+OPTIMAL_LINE = 2000 # OPTIMAL LINE OF TRACK
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 running = True
@@ -26,9 +34,9 @@ FOV = 360  # Field of view in degrees (360 for full circle)
 MAX_RANGE = 200  # Max range of LiDAR in pixels
 LIDAR_ANGLE_STEP = FOV / NUM_RAYS  # Angular increment per ray
 
-tracks = {"1" : ["track1.png", (420, 512), (413, 130)],"2" : ["track2.png", (420, 520), (413, 130)],}
-track = pygame.image.load(tracks["1"][0]).convert()
-car_img = pygame.image.load("yellow-car-top-view-free-png.png").convert_alpha()  # Smaller car to represent RC car
+tracks = [os.path.join("assets", "track1.png"), (420, 512), (413, 130)]
+track = pygame.image.load(tracks[0]).convert()
+car_img = pygame.image.load(os.path.join("assets", "yellow-car-top-view-free-png.png")).convert_alpha()  # Smaller car to represent RC car
 
 def eval_genomes(genomes, config):
     num = 0
@@ -39,14 +47,14 @@ def eval_genomes(genomes, config):
     for genome_id, genome in genomes:
         num+=1
         net = neat.nn.FeedForwardNetwork.create(genome, config) 
-        car = Car(WIDTH, HEIGHT, tracks["1"][1], car_img, tracks["1"][2])
+        car = Car(WIDTH, HEIGHT, tracks[1], car_img, tracks[2])
         lidar = Lidar(track, WIDTH, HEIGHT)
         nets.append(net)
         cars.append(car)
         lidars.append(lidar)
         ge.append(genome)
-        start = time.time()
-    
+        start = time.time() 
+
     num2 = 0
     running = True
     while running and len(cars) > 0:
@@ -72,8 +80,13 @@ def eval_genomes(genomes, config):
                     lidars.pop(cars.index(car))
                     cars.pop(cars.index(car))
                     break
-
+        
+        
         for i, car in enumerate(cars):
+            ge[i].fitness = car.get_distance_covered() / 1000.0
+            rotated_car, rotated_rect = car.moving_car()
+            screen.blit(rotated_car, rotated_rect.topleft)
+
             if not car.is_moving(start):
                 ge[i].fitness = car.get_distance_covered() / 1000.0 - 1
                 nets.pop(cars.index(car))
@@ -81,16 +94,18 @@ def eval_genomes(genomes, config):
                 lidars.pop(cars.index(car))
                 cars.pop(cars.index(car))
                 continue
-            
-            ge[i].fitness = car.get_distance_covered() / 1000.0
-            rotated_car, rotated_rect = car.moving_car()
-            screen.blit(rotated_car, rotated_rect.topleft)
-            
-            if car.has_finished():
-                ge[i].fitness += 5
-                running = False
+
+            elif car.has_finished() is True:
+                ge[i].fitness = OPTIMAL_LINE / car.get_distance_covered() * 10
+                nets.pop(cars.index(car))
+                ge.pop(cars.index(car))
+                lidars.pop(cars.index(car))
+                cars.pop(cars.index(car))
+                continue
+           
             pygame.display.flip()
-            clock.tick(5000)   
+            clock.tick(5000)  
+
         fps_surface = my_font.render("fps: " + str(round(clock.get_fps())), False, (0, 0, 0))
         screen.blit(fps_surface, (0,50))
         screen.blit(track, (0, 0))
@@ -116,43 +131,19 @@ def run_neat(config_file, checkpoint=None):
     population.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     population.add_reporter(stats)
-    best_fitness_reporter = BestFitnessReporter()
-    population.add_reporter(best_fitness_reporter)
-    population.add_reporter(neat.Checkpointer(generation_interval=9, filename_prefix='nc'))
+    population.add_reporter(neat.Checkpointer(generation_interval=50, filename_prefix='nc'))
     # Run for up to 50 generations
-    winner = population.run(eval_genomes, 10)
-    with open('best_genome.pkl', 'wb') as f:
+    winner = population.run(eval_genomes, 2)
+    with open(os.path.join("neat", "best_genome.pkl"), 'wb') as f:
         pickle.dump(winner, f)
     # Display the winning genome
     print('\nBest genome:\n{!s}'.format(winner))
-    plot_stats(stats, best_fitness_reporter)
-
-class BestFitnessReporter(neat.reporting.BaseReporter):
-    def __init__(self):
-        self.best_fitnesses = []
-
-    def post_evaluate(self, config, population, species, best_genome):
-        self.best_fitnesses.append(best_genome.fitness)
-
-def plot_stats(statistics, best_fitness_reporter):
-    generation = range(len(statistics.most_fit_genomes))
-    avg_fitness = np.array(statistics.get_fitness_mean())
-    best_fitness = np.array(best_fitness_reporter.best_fitnesses)
-
-    plt.plot(generation, avg_fitness, 'b-', label="average")
-    plt.plot(generation, best_fitness, 'g-', label="best")
-
-    plt.title("Population's average/best fitness")
-    plt.xlabel("Generations")
-    plt.ylabel("Fitness")
-    plt.grid()
-    plt.legend(loc="best")
-    plt.show()
-
-
+    pygame.quit()
+    visualize.draw_net(config, winner, True) # plot best neural network
+    visualize.plot_stats(stats, ylog=False, view=True) # plot average/best fitness'
 
 if __name__ == "__main__":
-    config_path = "config-feedforward.txt"  # Path to your NEAT config file
-    checkpoint_file = 'neat-checkpoint-4'
+    config_path = os.path.join("neat", "run-multiple-config-feedforward.txt")  # Path to your NEAT config file
+    checkpoint_file = None
     run_neat(config_path)
     pygame.quit()

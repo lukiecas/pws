@@ -9,6 +9,13 @@ from car import Car
 import pyautogui as pg
 from lidar_sensor import Lidar
 import matplotlib.pyplot as plt
+import visualize
+import os
+
+try:
+    os.chdir("/home/sjanschen/pws")
+except FileNotFoundError:
+    os.chdir("lucas-file-systeem")
 
 pygame.init()
 pygame.font.init()
@@ -26,9 +33,9 @@ FOV = 360  # Field of view in degrees (360 for full circle)
 MAX_RANGE = 200  # Max range of LiDAR in pixels
 LIDAR_ANGLE_STEP = FOV / NUM_RAYS  # Angular increment per ray
 
-tracks = {"1" : ["track1.png", (420, 512), (413, 130)],"2" : ["track2.png", (420, 520)],}
-track = pygame.image.load(tracks["1"][0]).convert()
-car_img = pygame.image.load("hawktuah.webp").convert_alpha()  # Smaller car to represent RC car
+tracks = [os.path.join("assets", "track1.png"), (420, 512), (413, 130)]
+track = pygame.image.load(tracks[0]).convert()
+car_img = pygame.image.load(os.path.join("assets", "yellow-car-top-view-free-png.png")).convert_alpha()  # Smaller car to represent RC car
 
 def eval_genomes(genomes, config):
     num = 0
@@ -36,7 +43,7 @@ def eval_genomes(genomes, config):
         num2 = 0
         num+=1
         net = neat.nn.FeedForwardNetwork.create(genome, config) 
-        car = Car(WIDTH, HEIGHT, tracks["1"][1], car_img, tracks["1"][2])
+        car = Car(WIDTH, HEIGHT, tracks[1], car_img, tracks[2])
         lidar = Lidar(track, WIDTH, HEIGHT)
         running = True
         start = time.time()
@@ -94,7 +101,7 @@ def eval_genomes(genomes, config):
             if num2 == 11:
                 num2 = 0
             # Frame rate
-            clock.tick(60)
+            clock.tick(5000)
 
 def run_neat(config_file, checkpoint=None):
     config = neat.config.Config(
@@ -120,30 +127,17 @@ def run_neat(config_file, checkpoint=None):
 
 
     # Run for up to 50 generations
-    winner = population.run(eval_genomes, 11)
-    with open('best_genome.pkl', 'wb') as f:
+    winner = population.run(eval_genomes, 1)
+    with open(os.path.join("neat", "best_genome.pkl"), 'wb') as f:
         pickle.dump(winner, f)
     # Display the winning genome
     print('\nBest genome:\n{!s}'.format(winner))
-    plot_stats(stats)
-
-def plot_stats(statistics):
-    generation = range(len(statistics.most_fit_genomes))
-    avg_fitness = np.array(statistics.get_fitness_mean())
-
-    plt.plot(generation, avg_fitness, 'b-', label="average")
-
-    plt.title("Population's average fitness")
-    plt.xlabel("Generations")
-    plt.ylabel("Fitness")
-    plt.grid()
-    plt.legend(loc="best")
-    plt.show()
-
-
+    pygame.quit()
+    visualize.draw_net(config, winner, True) # plot best neural network
+    visualize.plot_stats(stats, ylog=False, view=True) # plot average/best fitness'
 
 if __name__ == "__main__":
-    config_path = "config-feedforward.txt"  # Path to your NEAT config file
-    checkpoint_file = 'neat-checkpoint131'
+    config_path = os.path.join("neat", "config-feedforward.txt")  # Path to your NEAT config file
+    checkpoint_file = None
     run_neat(config_path, checkpoint_file)
     pygame.quit()
