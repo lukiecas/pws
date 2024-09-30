@@ -87,6 +87,8 @@ class Car:
         self.reached_checkpoint()
         if  (self.track_init[0] - 20)< self.x < (self.track_init[0] + 20) and self.y > self.track_init[1] - 200 and self.checkpoint_reached:
             return True
+        else:
+            return False
     def get_distance_covered(self):
         self.distance_covered = self.distance_covered + self.velocity
         return self.distance_covered
