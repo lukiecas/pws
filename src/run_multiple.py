@@ -92,7 +92,7 @@ def eval_genomes(genomes, config):
                 cars.pop(cars.index(car))
                 continue
 
-            elif car.has_finished() is True:
+            elif car.has_finished():
                 ge[i].fitness = OPTIMAL_LINE / car.get_distance_covered() * 10
                 nets.pop(cars.index(car))
                 ge.pop(cars.index(car))
