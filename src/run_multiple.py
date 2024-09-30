@@ -12,10 +12,7 @@ import matplotlib.pyplot as plt
 import visualize
 import os
 
-try:
-    os.chdir("/home/sjanschen/pws")
-except FileNotFoundError:
-    os.chdir("lucas-file-systeem")
+os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 pygame.init()
 pygame.font.init()
