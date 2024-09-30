@@ -1,7 +1,6 @@
 import pygame
 import math
 import time
-import pyautogui as pg
 class Car:
     def __init__(self, WIDTH, HEIGHT, track_init, car_img, checkpoint):
         self.checkpoint = checkpoint
