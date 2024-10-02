@@ -13,7 +13,6 @@ import visualize
 import os
 
 os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-hawktuah = pygame.image.load(os.path.join("assets", "hawktuah.webp")).convert_alpha()
 pygame.init()
 pygame.font.init()
 my_font = pygame.font.SysFont('Comic Sans MS', 30)
@@ -23,7 +22,7 @@ HEIGHT = 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 running = True
-
+hawktuah = pygame.image.load(os.path.join("assets", "hawktuah.webp")).convert_alpha()
 
 NUM_RAYS = 20  # Number of LiDAR rays
 FOV = 360  # Field of view in degrees (360 for full circle)
