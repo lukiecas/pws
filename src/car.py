@@ -7,7 +7,7 @@ class Car:
         self.car_img = pygame.transform.scale(car_img, (30, 20))
         self.car_rect = car_img.get_rect(center=(WIDTH//2, HEIGHT//2))  # Car's starting position
         # Constants for RC car behavior
-        self.MAX_VELOCITY = 8  # Max speed is higher for an RC car
+        self.MAX_VELOCITY = 1  # Max speed is higher for an RC car
         self.ACCELERATION_RATE = 0.2  # RC cars accelerate faster
         self.BRAKE_RATE = 0.1  # RC cars decelerate faster
           # RC cars can turn more sharply
