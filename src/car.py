@@ -75,7 +75,7 @@ class Car:
     def get_velocity(self):
         return self.velocity
     def is_moving(self, start_time):
-        if self.velocity == 0 and (time.time() - start_time) >= 1:
+        if self.velocity == 0 and (time.time() - start_time) >= 0.1:
             return False
         else:
             return True
