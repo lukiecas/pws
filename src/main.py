@@ -119,11 +119,11 @@ def run_neat(config_file, checkpoint=None):
     population.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     population.add_reporter(stats)
-    population.add_reporter(neat.Checkpointer(generation_interval=5, filename_prefix='neat-checkpoint'))
+    population.add_reporter(neat.Checkpointer(generation_interval=5, filename_prefix='neat-checkpoint-'))
 
 
     # Run for up to 50 generations
-    winner = population.run(eval_genomes, 1)
+    winner = population.run(eval_genomes, 100)
     with open(os.path.join("neat", "best_genome.pkl"), 'wb') as f:
         pickle.dump(winner, f)
     # Display the winning genome
