@@ -1,4 +1,6 @@
 import ydlidar
+import neat
+import pickle
 
 # TODO: aansluiten met NEAT model
 
@@ -17,9 +19,23 @@ laser.setlidaropt(ydlidar.LidarPropSampleRate, 3)
 laser.setlidaropt(ydlidar.LidarPropSingleChannel, True)
 laser.setlidaropt(ydlidar.LidarPropMaxAngle, 180.0)
 laser.setlidaropt(ydlidar.LidarPropMinAngle, -180.0)
-laser.setlidaropt(ydlidar.LidarPropMaxRange, 16.0)
-laser.setlidaropt(ydlidar.LidarPropMinRange, 0.08)
+laser.setlidaropt(ydlidar.LidarPropMaxRange, 8.0)
+laser.setlidaropt(ydlidar.LidarPropMinRange, 0.1)
 laser.setlidaropt(ydlidar.LidarPropIntenstiy, False)
+
+MAX_LIDAR_RANGE = 8.0
+
+config = neat.config.Config(
+        neat.DefaultGenome,
+        neat.DefaultReproduction,
+        neat.DefaultSpeciesSet,
+        neat.DefaultStagnation,
+        "/home/lucas/pws/neat/config-feedforward.txt"
+    )
+
+with open('/home/lucas/pws/neat/best_genome.pkl', 'rb') as f:
+    winner = pickle.load(f)
+net = neat.nn.FeedForwardNetwork.create(winner, config)
 
 def scan():
     ret = laser.initialize()
@@ -44,10 +60,13 @@ def scan():
                     input_point = data_points[index]
                     input_points.append(input_point) # dit zijn alle 16 "rays" met hoek en afstand, voer dit in de ML model
             
-                # activeer hier NEAT
-                # bijvoorbeeld: output = net.activate(input_points)
-                # steering = output[0]
-                # acceleration = output[1]
+                # activeer hier NEAT 
+                normalized_distances = [input_point[1] / MAX_LIDAR_RANGE for input_point in input_points]
+                output = net.activate(normalized_distances)
+                steering = output[0]
+                acceleration = output[1]
+                print(steering)
+                print(acceleration)
 
         laser.turnOff()
     laser.disconnecting()
