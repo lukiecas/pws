@@ -1,7 +1,8 @@
 import ydlidar
 import neat
 import pickle
-
+import RPi.GPIO as GPIO
+from time import sleep
 # TODO: aansluiten met NEAT model
 
 ydlidar.os_init()
@@ -23,6 +24,12 @@ laser.setlidaropt(ydlidar.LidarPropMaxRange, 8.0)
 laser.setlidaropt(ydlidar.LidarPropMinRange, 0.1)
 laser.setlidaropt(ydlidar.LidarPropIntenstiy, False)
 
+servo_pin = 17
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(servo_pin, GPIO.OUT)
+
+pwm = GPIO.PWM(servo_pin, 50)  # 50 Hz
+pwm.start(0)
 MAX_LIDAR_RANGE = 8.0
 
 config = neat.config.Config(
@@ -36,6 +43,31 @@ config = neat.config.Config(
 with open('/home/lucas/pws/neat/best_genome.pkl', 'rb') as f:
     winner = pickle.load(f)
 net = neat.nn.FeedForwardNetwork.create(winner, config)
+
+
+
+def set_speed(speed):
+    """Set speed for continuous rotation servo."""
+    # Map speed (-100 to 100) to duty cycle (1.0 to 2.0 ms)
+    duty = 1.5 + (speed / 100.0) * 0.5  # 1.0ms = full reverse, 2.0ms = full forward
+    pwm.ChangeDutyCycle(duty / 20 * 100)  # Convert to duty cycle percentage
+
+def set_angle(angle, speed=1):
+    """Set the servo to a specific angle gradually."""
+    duty = 2 + (angle / 18)  # Convert angle to duty cycle (2-12%)
+    current_duty = 2  # Assume initial position at 0 degrees
+    
+    if current_duty < duty:
+        step = 0.1  # Increment duty cycle slowly
+    else:
+        step = -0.1  # Decrement duty cycle slowly
+
+    while abs(current_duty - duty) > 0.1:  # Gradually adjust to the target
+        current_duty += step
+        pwm.ChangeDutyCycle(current_duty)
+        sleep(speed / 100.0)  # Adjust speed (smaller is faster)
+
+    pwm.ChangeDutyCycle(0)  # Stop sending signal after movement
 
 def scan():
     ret = laser.initialize()
@@ -65,9 +97,12 @@ def scan():
                 output = net.activate(normalized_distances)
                 steering = output[0]
                 acceleration = output[1]
+                set_speed(acceleration * 100)
+                set_angle(steering *180)
                 print(steering)
                 print(acceleration)
 
         laser.turnOff()
     laser.disconnecting()
-
+pwm.stop()
+GPIO.cleanup()
