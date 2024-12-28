@@ -40,10 +40,9 @@ config = neat.config.Config(
         "/home/lucas/pws/neat/config-feedforward.txt"
     )
 
-with open('/home/lucas/pws/neat/best_genome.pkl', 'rb') as f:
+with open('/home/lucas/pws/neat/model_v1.pkl', 'rb') as f:
     winner = pickle.load(f)
 net = neat.nn.FeedForwardNetwork.create(winner, config)
-
 
 
 def set_speed(speed):
@@ -77,7 +76,7 @@ def scan():
         while ret and ydlidar.os_isOk() :
             r = laser.doProcessSimple(scan)
             if r:
-                desired_points = [-3.141592653589793, -2.748893571891069, -2.356194490192345, -1.9634954084936207, -1.5707963267948966, -1.1780972450961724, -0.7853981633974483, -0.39269908169872414, 0.0, 0.39269908169872414, 0.7853981633974483, 1.1780972450961724, 1.5707963267948966, 1.9634954084936207, 2.356194490192345, 2.748893571891069] # desired angles for the ML model
+                desired_points = [0, 0.39269908169872414, 0.7853981633974483, 1.1780972450961724, 1.5707963267948966, 1.9634954084936207, 2.356194490192345, 2.748893571891069, 3.141592653589793, -2.748893571891069, -2.356194490192345, -1.9634954084936207, -1.5707963267948966, -1.1780972450961724, -0.7853981633974483, -0.39269908169872414]
                 data_points = []
                 input_points = []
                 for point in scan.points:
