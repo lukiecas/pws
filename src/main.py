@@ -26,10 +26,10 @@ hawktuah = pygame.image.load(os.path.join("assets", "hawktuah.webp")).convert_al
 
 NUM_RAYS = 20  # Number of LiDAR rays
 FOV = 360  # Field of view in degrees (360 for full circle)
-MAX_RANGE = 200  # Max range of LiDAR in pixels
+MAX_RANGE = 800  # Max range of LiDAR in pixels
 LIDAR_ANGLE_STEP = FOV / NUM_RAYS  # Angular increment per ray
 
-tracks = [os.path.join("assets", "track1.png"), (420, 512), (413, 130)]
+tracks = [os.path.join("assets", "track2.png"), (420, 512), (413, 130)]
 track = pygame.image.load(tracks[0]).convert()
 car_img = pygame.image.load(os.path.join("assets", "yellow-car-top-view-free-png.png")).convert_alpha()  # Smaller car to represent RC car
 
@@ -50,19 +50,17 @@ def eval_genomes(genomes, config):
                     running = False
                     
             x, y, angle = car.report_position()
-            if num2 == 0:
-                distances, hit_points = lidar.simulate_lidar(x, y, -angle)
-                normalized_distances = [d / MAX_RANGE for d in distances]
-                output = net.activate(normalized_distances)
-                steering = output[0]
-                throttle = output[1]    
-                car.handling(throttle)
-                car.change_velocity()
-                car.steering(steering)
+            distances, hit_points = lidar.simulate_lidar(x, y, -angle)
+            normalized_distances = [d / MAX_RANGE for d in distances]
+            output = net.activate(normalized_distances)
+            steering = output[0]
+            throttle = output[1]    
+            car.handling(throttle)
+            car.change_velocity()
+            car.steering(steering)
             
-            check_if_hit, _ = lidar.simulate_lidar(x, y, -angle)
-            for distance in check_if_hit:  
-                if distance <= 0:
+            for distance in distances:  
+                if distance <= 20:
                     running = False
             if not car.is_moving(start):
                 running = False
@@ -72,7 +70,7 @@ def eval_genomes(genomes, config):
             screen.blit(track, (0, 0))
             screen.blit(rotated_car, rotated_rect.topleft)
             for hit_point in hit_points:
-                if hit_points.index(hit_point) == 4 or hit_points.index(hit_point) == 12:
+                if hit_points.index(hit_point) == 0 or hit_points.index(hit_point) == 7:
                 
                     pygame.draw.line(screen, (0, 255, 0), (x, y), hit_point)
                 else:
@@ -93,9 +91,6 @@ def eval_genomes(genomes, config):
             fps_surface = my_font.render(str(time.time() - start), False, (0, 0, 0))
             screen.blit(fps_surface, (100,0))
             pygame.display.flip()
-            num2 += 1
-            if num2 == 11:
-                num2 = 0
             # Frame rate
             clock.tick(5000)
 
@@ -119,12 +114,12 @@ def run_neat(config_file, checkpoint=None):
     population.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     population.add_reporter(stats)
-    population.add_reporter(neat.Checkpointer(generation_interval=5, filename_prefix='neat-checkpoint-'))
+    population.add_reporter(neat.Checkpointer(generation_interval=4, filename_prefix='n'))
 
 
     # Run for up to 50 generations
-    winner = population.run(eval_genomes, 100)
-    with open(os.path.join("neat", "best_genome.pkl"), 'wb') as f:
+    winner = population.run(eval_genomes, 10)
+    with open(os.path.join("neat", "model_v4.pkl"), 'wb') as f:
         pickle.dump(winner, f)
     # Display the winning genome
     print('\nBest genome:\n{!s}'.format(winner))
@@ -134,6 +129,6 @@ def run_neat(config_file, checkpoint=None):
 
 if __name__ == "__main__":
     config_path = os.path.join("neat", "config-feedforward.txt")  # Path to your NEAT config file
-    checkpoint_file = None
+    checkpoint_file = "n3"
     run_neat(config_path, checkpoint_file)
     pygame.quit()

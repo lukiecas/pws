@@ -1,13 +1,15 @@
 import math
+
 class Lidar:
     def __init__(self, track, WIDTH, HEIGHT):
         self.NUM_RAYS = 16  # Number of LiDAR rays
-        self.FOV = 360  # Field of view in degrees (360 for full circle)
-        self.MAX_RANGE = 200  # Max range of LiDAR in pixels
-        self.LIDAR_ANGLE_STEP = self.FOV / self.NUM_RAYS  # Angular increment per ray
+        self.FOV = 180  # Change to 180 degrees for forward scanning
+        self.MAX_RANGE = 800  # Max range of LiDAR in pixels
+        self.LIDAR_ANGLE_STEP = self.FOV / (self.NUM_RAYS - 1)  # Angular increment per ray
         self.track = track
         self.WIDTH = WIDTH
         self.HEIGHT = HEIGHT
+
     def cast_ray(self, x, y, angle):
         for i in range(self.MAX_RANGE):
             ray_x = int(x + i * math.cos(angle))
@@ -23,18 +25,16 @@ class Lidar:
         
         # If no collision, return the maximum range
         return (int(x + self.MAX_RANGE * math.cos(angle)), int(y + self.MAX_RANGE * math.sin(angle))), self.MAX_RANGE
+
     def simulate_lidar(self, x, y, car_orientation):
         distances = []
         rays = []
         
         for i in range(self.NUM_RAYS):
-            angle = math.radians(car_orientation) + math.radians(i * self.LIDAR_ANGLE_STEP)  # Convert angle to radians
+            # Angle spans from -90° to +90° relative to the car
+            angle = math.radians(car_orientation) + math.radians(-90 + i * self.LIDAR_ANGLE_STEP)  
             hit_point, distance = self.cast_ray(x, y, angle)
             distances.append(distance)
             rays.append(hit_point)
-        
-        '''for i in range(6):
-            j = i + 5
-            distances.pop(j)
-            rays.pop(j)'''
+
         return distances, rays
